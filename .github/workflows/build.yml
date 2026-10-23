@@ -1,0 +1,43 @@
+
+name: Build TRAJECTORY AI BOT APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Get source code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            python3-pip python3-venv git zip unzip \
+            openjdk-17-jdk autoconf libtool pkg-config \
+            zlib1g-dev libncurses5-dev libncursesw5-dev \
+            cmake libffi-dev libssl-dev
+
+      - name: Install Buildozer
+        run: |
+          python3 -m venv .venv
+          . .venv/bin/activate
+          pip install --upgrade pip setuptools wheel
+          pip install buildozer cython==0.29.36
+
+      - name: Build APK
+        run: |
+          . .venv/bin/activate
+          yes | buildozer -v android debug
+
+      - name: Save APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: trajectory-ai-bot-apk
+          path: bin/*.apk
+          if-no-files-found: error
